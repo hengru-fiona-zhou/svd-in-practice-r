@@ -1,0 +1,23 @@
+# R session files
+.Rhistory
+.RData
+.RDataTmp
+.Ruserdata
+.Rproj.user/
+
+# macOS files
+.DS_Store
+
+# Raw datasets and cached computations
+data/raw/
+cache/
+
+# Incomplete downloads
+*.crdownload
+
+# LaTeX temporary files
+*.aux
+*.log
+*.fls
+*.fdb_latexmk
+*.synctex.gz
