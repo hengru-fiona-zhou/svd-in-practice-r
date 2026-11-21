@@ -54,7 +54,8 @@ cooccurrence_matrix <- fcm(
   context = "window",
   window = 5,
   count = "weighted",
-  weights = 1 / (1:5)
+  weights = 1 / (1:5),
+  tri = FALSE
 )
 
 # Save the generated matrix locally
