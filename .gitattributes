@@ -1,0 +1,3 @@
+# The rendered Quarto report is generated from analysis/report.qmd.
+# Keep it in the repository, but exclude it from GitHub language statistics.
+analysis/report.html linguist-generated
