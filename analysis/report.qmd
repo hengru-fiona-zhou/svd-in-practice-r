@@ -1,0 +1,195 @@
+---
+title: "Low-Rank Methods in Practice"
+subtitle: "Word embeddings and image compression with singular value decomposition"
+author: "Hengru (Fiona) Zhou"
+format:
+  html:
+    toc: true
+    code-fold: true
+    theme: cosmo
+    embed-resources: true
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+library(here)
+
+# Scale high-resolution PNG files to the report column.
+knitr::opts_chunk$set(
+  out.width = "85%",
+  fig.align = "center"
+)
+
+nearest_neighbors <- read.csv(
+  here("results", "nearest_neighbors.csv")
+)
+
+gender_associations <- read.csv(
+  here("results", "gender_associations.csv")
+)
+
+compression_metrics <- read.csv(
+  here("results", "image_compression_metrics.csv")
+)
+```
+
+## Project overview
+
+This project explores two applications of singular value decomposition
+(SVD):
+
+1. Learning low-dimensional word embeddings from a word
+   co-occurrence matrix.
+2. Compressing a grayscale image using low-rank matrix
+   approximations.
+
+The text analysis uses the six novels included in the
+`janeaustenr` package. Words that occur within a five-word window are
+recorded in a weighted co-occurrence matrix. The 3,000 most frequent
+non-stopwords are retained.
+
+## Word embeddings
+
+The co-occurrence matrix is transformed using
+
+\[
+\widetilde{M}_{ij} = \log(1 + M_{ij})
+\]
+
+and approximated using the top 100 singular components. The resulting
+word vectors are normalized so cosine similarity can be used to compare
+words.
+
+### Singular values
+
+```{r}
+knitr::include_graphics(
+  here("figures", "singular_values.png")
+)
+```
+
+The rapid initial decline indicates that a relatively small number of
+components captures a substantial portion of the matrix structure.
+Later components contribute progressively smaller refinements.
+
+### Nearest neighbours
+
+```{r}
+selected_neighbors <- subset(
+  nearest_neighbors,
+  target %in% c(
+    "love",
+    "marriage",
+    "elizabeth",
+    "darcy"
+  )
+)
+
+knitr::kable(
+  selected_neighbors,
+  digits = 4,
+  col.names = c(
+    "Target",
+    "Neighbour",
+    "Cosine similarity"
+  )
+)
+```
+
+The model recovers several intuitive relationships. Words such as
+`affection`, `attachment`, and `heart` appear near `love`, while major
+characters from *Pride and Prejudice* form a recognizable cluster around
+`elizabeth` and `darcy`.
+
+## Gender associations
+
+A gender direction is estimated by averaging several normalized
+differences, including `woman - man`, `girl - boy`, and
+`wife - husband`.
+
+```{r}
+knitr::include_graphics(
+  here("figures", "gender_associations.png")
+)
+```
+
+These projections describe patterns in this particular literary corpus.
+They should not be interpreted as inherent characteristics of people or
+concepts. The results can reflect historical language, character roles,
+and the limited scope of the novels.
+
+## Image compression
+
+The built-in `volcano` topographic matrix is treated as a grayscale
+image. Rank-\(k\) approximations are reconstructed using
+
+\[
+A_k = U_k \Sigma_k V_k^\top.
+\]
+
+```{r}
+knitr::include_graphics(
+  here("figures", "image_compression.png")
+)
+```
+
+```{r}
+compression_display <- compression_metrics
+
+compression_display$relative_error <- paste0(
+  round(
+    100 * compression_display$relative_error,
+    2
+  ),
+  "%"
+)
+
+compression_display$storage_saving <- paste0(
+  round(
+    100 * compression_display$storage_saving,
+    2
+  ),
+  "%"
+)
+
+knitr::kable(
+  compression_display,
+  col.names = c(
+    "Rank",
+    "Relative error",
+    "Stored values",
+    "Storage saving"
+  )
+)
+```
+
+A rank-10 approximation reduces storage by approximately 72% while
+keeping relative reconstruction error near 1.45%. At sufficiently high
+ranks, the factorized representation becomes larger than the original
+matrix.
+
+## Limitations
+
+The text results depend on the corpus, vocabulary size, context window,
+stopword list, and embedding dimension. Jane Austen's novels represent a
+specific historical and literary setting, so conclusions should not be
+generalized to modern language or society.
+
+The image example illustrates low-rank approximation on a small
+topographic matrix. Performance on photographs and other complex images
+may differ.
+
+## Reproducibility
+
+Run the scripts in numerical order:
+
+```text
+R/01_build_corpus.R
+R/02_fit_embeddings.R
+R/03_explore_embeddings.R
+R/04_analyze_gender_associations.R
+R/05_image_compression.R
+```
